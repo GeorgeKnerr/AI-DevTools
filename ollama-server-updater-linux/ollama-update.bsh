@@ -1,0 +1,60 @@
+#!/usr/bin/bash
+
+SERVICE_FILE="/etc/systemd/system/ollama.service"
+ENV_VAR="Environment=\"OLLAMA_HOST=0.0.0.0\""
+BLUE='\033[1;34m'
+NC='\033[0m' # No Color
+
+echo;echo -e "${BLUE}Checking ollama's current version:${NC}"
+ollama --version
+
+echo;echo -e "${BLUE}Downloading and installing latest ollama:${NC}"
+curl -fsSL https://ollama.com/install.sh | sh
+sleep 3
+
+echo;echo -e "${BLUE}Checking ollama's current version:${NC}"
+ollama --version
+
+# Check if the service file exists
+if [[ ! -f "$SERVICE_FILE" ]]; then
+    echo -e "${BLUE}Service file not found: $SERVICE_FILE${NC}"
+    exit 1
+fi
+
+# Backup the original service file
+echo;echo -e "${BLUE}Backing up the original service file...${NC}"
+sudo cp "$SERVICE_FILE" "${SERVICE_FILE}.bak"
+sleep 1
+
+# Use sed to replace the existing Environment line or add it if it doesn't exist
+echo;echo -e "${BLUE}Updating the Environment variable...${NC}"
+sudo sed -i "/^Environment=/c\\$ENV_VAR" "$SERVICE_FILE"
+sleep 1
+
+# Reload the systemd daemon to apply changes
+echo;echo -e "${BLUE}Reloading systemd daemon...${NC}"
+sudo systemctl daemon-reload
+sleep 1
+
+# Restart the service
+echo;echo -e "${BLUE}Restarting ollama.service...${NC}"
+sudo systemctl restart ollama.service
+sleep 1
+
+# Check the status of the service
+echo;echo -e "${BLUE}Checking status of ollama.service...${NC}"
+sudo systemctl --no-pager status ollama.service
+sleep 1
+
+echo;echo -e "${BLUE}Environment variable update complete.${NC}"
+sleep 1
+
+echo;echo -e "${BLUE}Restarting ollama.service that servies the api:${NC}"
+sudo systemctl restart ollama.service
+sleep 1
+
+echo;echo -e "${BLUE}Checking if ollama server is running on 0.0.0.0:14365${NC}"
+sudo netstat -tlpn | grep 11434
+sleep 1
+
+echo;echo -e "${BLUE}ollama update complete.${NC}"

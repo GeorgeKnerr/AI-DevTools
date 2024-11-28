@@ -1,0 +1,19 @@
+#!/usr/bin/bash
+
+
+/usr/bin/docker stop open-webui
+/usr/bin/docker rm open-webui
+/usr/bin/docker pull ghcr.io/open-webui/open-webui:main
+/usr/bin/docker run -d \
+-p 3000:8080 \
+--network=nginx_ssl_proxy_network \
+-v open-webui:/app/backend/data \
+-v /etc/ssl/certs/ca-certificates.crt:/etc/ssl/certs/ca-certificates.crt:ro \
+-e OPENAI_API_KEY \
+-e OLLAMA_BASE_URL=http://aiops1.knerr.us:11434 \
+-e REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+--restart always \
+--name open-webui \
+ghcr.io/open-webui/open-webui:main 
+
+
